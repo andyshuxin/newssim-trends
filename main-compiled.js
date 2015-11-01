@@ -312,6 +312,20 @@
     }
   }
 
+  var getMaxValue = function getMaxValue(data) {
+    return data.reduce(function (max, entry) {
+      return entry.value > max ? entry.value : max;
+    }, 0);
+  };
+
+  var padValue = function padValue(value, maxValue) {
+    var result = value.toString();
+    while (result.length < maxValue.toString().length) {
+      result = '<span class="zeroPad">0</span>' + result;
+    }
+    return result;
+  };
+
   // Hide loading notice as the script has been fully loaded by now
   var loadingNotice = document.getElementsByClassName('loading-notice')[0];
   loadingNotice.parentNode.removeChild(loadingNotice);
@@ -324,18 +338,31 @@
   btnConfirm.addEventListener('click', function (event) {
     var searchResults = transformToArray(aggregatePeriod(countWordByDay(keywordInput.value, newssimData), getChosenPeriod()));
 
-    var selections = d3.select('#display').selectAll('div').data(searchResults);
+    var maxValue = getMaxValue(searchResults);
+
+    var barScale = d3.scale.linear().domain([0, maxValue]).range([0, window.innerWidth / 2]);
+
+    var selections = d3.select('#display').selectAll('p').data(searchResults, function (d) {
+      return d.period;
+    });
+
     var newLines = selections.enter().append('p');
     newLines.append('span').classed({
       'description': true
-    }).text(function (d) {
-      return d.period + ': ' + d.value;
     });
+
     newLines.append('div').classed({
       "barBody": true
-    }).style('height', '10px').style('width', '0').transition().style('width', function (d) {
-      return d.value * 10 + 'px';
     });
+
+    selections.selectAll('span.description').html(function (d) {
+      return '[' + d.period + ': ' + padValue(d.value, maxValue) + ']';
+    });
+
+    selections.selectAll('div.barBody').style('width', '0').transition().style('width', function (d) {
+      return barScale(d.value) + 'px';
+    });
+
     selections.exit().remove();
   });
 })(window, window.document, window.d3, window.newssim_db);

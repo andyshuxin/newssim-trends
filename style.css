@@ -1,5 +1,5 @@
 body {
-    font-family: 'Helvetica Neue', 'Arial', sans-serif;
+    font-family: 'Consolas', 'Courier', sans-serif;
 }
 
 p {
@@ -18,4 +18,9 @@ p {
 .barBody {
     background-color: black;
     display: inline-block;
+    height: 11px;
+}
+
+.zeroPad {
+    visibility: hidden;
 }

@@ -260,6 +260,17 @@
     }
   }
 
+  const getMaxValue = (data) =>
+    data.reduce((max, entry) => entry.value > max ? entry.value : max , 0)
+
+  const padValue = (value, maxValue) => {
+    let result = value.toString()
+    while (result.length < maxValue.toString().length) {
+      result = '<span class="zeroPad">0</span>' + result
+    }
+    return result
+  }
+
   // Hide loading notice as the script has been fully loaded by now
   const loadingNotice = document.getElementsByClassName('loading-notice')[0]
   loadingNotice.parentNode.removeChild(loadingNotice)
@@ -272,24 +283,36 @@
   btnConfirm.addEventListener('click', (event) => {
     let searchResults = transformToArray(aggregatePeriod(countWordByDay(keywordInput.value, newssimData), getChosenPeriod()))
 
-    let selections = d3.select('#display').selectAll('div').data(searchResults)
+    let maxValue = getMaxValue(searchResults)
+
+    let barScale = d3.scale.linear()
+      .domain([0, maxValue])
+      .range([0, window.innerWidth / 2])
+
+    let selections = d3.select('#display').selectAll('p').data(searchResults,
+      d => d.period)
+
     let newLines = selections.enter().append('p')
     newLines.append('span')
       .classed({
         'description': true
       })
-      .text(d =>
-      `${d.period}: ${d.value}`
-    )
+
     newLines.append('div')
-               .classed({
-                 "barBody": true
-               })
-               .style('height', '10px')
-               .style('width', '0')
-               .transition()
-               .style('width', d => d.value * 10 + 'px')
+      .classed({
+        "barBody": true
+      })
+
+    selections.selectAll('span.description')
+      .html(d => `[${d.period}: ${padValue(d.value, maxValue)}]`)
+
+    selections.selectAll('div.barBody')
+      .style('width', '0')
+      .transition()
+      .style('width', d => (barScale(d.value) + 'px'))
+
     selections.exit().remove()
+
   })
 
 })(window, window.document, window.d3, window.newssim_db)
