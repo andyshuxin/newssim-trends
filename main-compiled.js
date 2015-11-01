@@ -410,7 +410,7 @@
     var html = '';
 
     for (var i = 0; i < data.length; i += 1) {
-      html += '\n        <div class="lightbox-content">\n          <div>\n            <time>\n              ' + prettifyDate(data[i].publish_date) + '\n            </time>\n            <a href=' + data[i].url + '>' + data[i].url + '</a>\n          </div>\n          <div>\n            ' + prettifyLightboxContent(data[i].content, keyword, 'lightbox-highlight') + '\n          </div>\n        </div>\n      ';
+      html += '\n        <div class="lightbox-content">\n          <div>\n            <span>\n              [' + (i + 1) + ']\n            </span>\n            <time>\n              ' + prettifyDate(data[i].publish_date) + '\n            </time>\n            <a href=' + data[i].url + ' target="_blank">' + data[i].url + '</a>\n          </div>\n          <div class="lightbox-text">\n            ' + prettifyLightboxContent(data[i].content, keyword, 'lightbox-highlight') + '\n          </div>\n        </div>\n      ';
     }
 
     div.innerHTML = html;

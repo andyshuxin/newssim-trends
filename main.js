@@ -362,12 +362,15 @@
       html += `
         <div class="lightbox-content">
           <div>
+            <span>
+              [${i + 1}]
+            </span>
             <time>
               ${prettifyDate(data[i].publish_date)}
             </time>
-            <a href=${data[i].url}>${data[i].url}</a>
+            <a href=${data[i].url} target="_blank">${data[i].url}</a>
           </div>
-          <div>
+          <div class="lightbox-text">
             ${prettifyLightboxContent(data[i].content, keyword, 'lightbox-highlight')}
           </div>
         </div>
