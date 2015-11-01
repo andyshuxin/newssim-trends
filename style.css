@@ -1,0 +1,21 @@
+body {
+    font-family: 'Helvetica Neue', 'Arial', sans-serif;
+}
+
+p {
+    margin: 0;
+    padding: 0;
+}
+
+.description {
+    margin: 0 0.5em 0 0;
+}
+
+.display-line {
+
+}
+
+.barBody {
+    background-color: black;
+    display: inline-block;
+}

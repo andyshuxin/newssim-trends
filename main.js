@@ -76,7 +76,6 @@
     return result
   }
 
-
   /**
    * Input n and return '0n' if n < 0
    * @param n
@@ -104,8 +103,6 @@
     //FIXME: Wrong results on leap years
 
   }
-
-  console.log(getDaysInMonth(1))
 
   /**
    * Return the intervals of two dates, for example, input '201408' and '201502'
@@ -213,26 +210,86 @@
    */
   function transformToArray (data) {
 
-    // First step: add zeros to the gaps lacking data
+    let result = []
 
+    // Get the range of dates from data
+    let minDate = 'Z'
+    let maxDate = ''
+
+    for (let key in data) if (data.hasOwnProperty(key)) {
+      if (key < minDate) {
+        minDate = key
+      }
+
+      if (key > maxDate) {
+        maxDate = key
+      }
+    }
+
+    // Generate the array by pushing period-value pairs one by one
+    for (let period of getDateIntervals(minDate, maxDate)) {
+      if (data[period]) {
+        result.push({
+          period,
+          value: data[period]
+        })
+      } else {
+        result.push({
+          period,
+          value: 0
+        })
+      }
+    }
+
+    return result
   }
 
-  console.log(transformToArray({'201404': 32, '201408': 6}))
+  /*================================================
 
-  // Hide loading notice
+   END of data processing; START of DOM manipulation
+
+  =================================================*/
+
+  function getChosenPeriod () {
+
+    const options = document.getElementsByName('period')
+    for (let i = 0; i < options.length; i += 1) {
+      if (options[i].checked) {
+        return options[i].value
+      }
+    }
+  }
+
+  // Hide loading notice as the script has been fully loaded by now
   const loadingNotice = document.getElementsByClassName('loading-notice')[0]
   loadingNotice.parentNode.removeChild(loadingNotice)
 
-  // Get DOM elements
+  // Get UI elements
   const btnConfirm = document.getElementsByClassName('btnConfirm')[0]
   const keywordInput = document.getElementsByClassName('keywordInput')[0]
   const dataDisplay = document.getElementById('display')
 
   btnConfirm.addEventListener('click', (event) => {
-    let searchResult = aggregatePeriod(countWordByDay(keywordInput.value, newssimData), 'month')
-    let resultLine
-    let bar
-    dataDisplay.innerHTML = ''
+    let searchResults = transformToArray(aggregatePeriod(countWordByDay(keywordInput.value, newssimData), getChosenPeriod()))
+
+    let selections = d3.select('#display').selectAll('div').data(searchResults)
+    let newLines = selections.enter().append('p')
+    newLines.append('span')
+      .classed({
+        'description': true
+      })
+      .text(d =>
+      `${d.period}: ${d.value}`
+    )
+    newLines.append('div')
+               .classed({
+                 "barBody": true
+               })
+               .style('height', '10px')
+               .style('width', '0')
+               .transition()
+               .style('width', d => d.value * 10 + 'px')
+    selections.exit().remove()
   })
 
 })(window, window.document, window.d3, window.newssim_db)

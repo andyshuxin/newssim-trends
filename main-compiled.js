@@ -132,8 +132,6 @@
     //FIXME: Wrong results on leap years
   }
 
-  console.log(getDaysInMonth(1));
-
   /**
    * Return the intervals of two dates, for example, input '201408' and '201502'
    * you get ['201408', '201409', '201410', '201411', '201412', '201501', '201502']
@@ -245,26 +243,100 @@
    */
   function transformToArray(data) {
 
-    // First step: add zeros to the gaps lacking data
+    var result = [];
 
+    // Get the range of dates from data
+    var minDate = 'Z';
+    var maxDate = '';
+
+    for (var key in data) {
+      if (data.hasOwnProperty(key)) {
+        if (key < minDate) {
+          minDate = key;
+        }
+
+        if (key > maxDate) {
+          maxDate = key;
+        }
+      }
+    } // Generate the array by pushing period-value pairs one by one
+    var _iteratorNormalCompletion2 = true;
+    var _didIteratorError2 = false;
+    var _iteratorError2 = undefined;
+
+    try {
+      for (var _iterator2 = getDateIntervals(minDate, maxDate)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+        var period = _step2.value;
+
+        if (data[period]) {
+          result.push({
+            period: period,
+            value: data[period]
+          });
+        } else {
+          result.push({
+            period: period,
+            value: 0
+          });
+        }
+      }
+    } catch (err) {
+      _didIteratorError2 = true;
+      _iteratorError2 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion2 && _iterator2['return']) {
+          _iterator2['return']();
+        }
+      } finally {
+        if (_didIteratorError2) {
+          throw _iteratorError2;
+        }
+      }
+    }
+
+    return result;
   }
 
-  console.log(transformToArray({ '201404': 32, '201408': 6 }));
+  /*================================================
+    END of data processing; START of DOM manipulation
+   =================================================*/
 
-  // Hide loading notice
+  function getChosenPeriod() {
+
+    var options = document.getElementsByName('period');
+    for (var i = 0; i < options.length; i += 1) {
+      if (options[i].checked) {
+        return options[i].value;
+      }
+    }
+  }
+
+  // Hide loading notice as the script has been fully loaded by now
   var loadingNotice = document.getElementsByClassName('loading-notice')[0];
   loadingNotice.parentNode.removeChild(loadingNotice);
 
-  // Get DOM elements
+  // Get UI elements
   var btnConfirm = document.getElementsByClassName('btnConfirm')[0];
   var keywordInput = document.getElementsByClassName('keywordInput')[0];
   var dataDisplay = document.getElementById('display');
 
   btnConfirm.addEventListener('click', function (event) {
-    var searchResult = aggregatePeriod(countWordByDay(keywordInput.value, newssimData), 'month');
-    var resultLine = undefined;
-    var bar = undefined;
-    dataDisplay.innerHTML = '';
+    var searchResults = transformToArray(aggregatePeriod(countWordByDay(keywordInput.value, newssimData), getChosenPeriod()));
+
+    var selections = d3.select('#display').selectAll('div').data(searchResults);
+    var newLines = selections.enter().append('p');
+    newLines.append('span').classed({
+      'description': true
+    }).text(function (d) {
+      return d.period + ': ' + d.value;
+    });
+    newLines.append('div').classed({
+      "barBody": true
+    }).style('height', '10px').style('width', '0').transition().style('width', function (d) {
+      return d.value * 10 + 'px';
+    });
+    selections.exit().remove();
   });
 })(window, window.document, window.d3, window.newssim_db);
 
