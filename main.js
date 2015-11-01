@@ -362,7 +362,7 @@
     let div = document.createElement('div')
     div.className = 'lightbox'
 
-    let html = ''
+    let html = 'Press ESC to exit this lightbox'
 
     for (let i = 0; i < data.length; i += 1) {
       html += `
