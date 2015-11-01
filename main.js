@@ -412,10 +412,9 @@
   dataDisplay.addEventListener('click', event => {
 
     /**
-     *   A bar in the bar-chart is clicked:
+     *   When a bar in the bar-chart is clicked:
      *   Display detailed information about that day
      */
-
     if (event.target.className === 'barBody') {
 
       let keyword = event.target.dataset.keyword

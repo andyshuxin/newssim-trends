@@ -450,10 +450,9 @@
   dataDisplay.addEventListener('click', function (event) {
 
     /**
-     *   A bar in the bar-chart is clicked:
+     *   When a bar in the bar-chart is clicked:
      *   Display detailed information about that day
      */
-
     if (event.target.className === 'barBody') {
       (function () {
 
