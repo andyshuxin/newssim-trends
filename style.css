@@ -44,14 +44,20 @@ p {
 
 .lightbox-highlight {
     border: 2px solid yellowgreen;
+    padding-top: 0.2em;
 }
 
 .lightbox-content {
     width: 50%;
     margin: 1em auto;
-    line-height: 1.5;
+    line-height: 2;
 }
 
 .lightbox-content a {
     color: yellow;
+}
+
+.lightbox-text:first-line {
+    font-weight: bolder;
+    margin-bottom: 1em;
 }
