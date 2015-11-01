@@ -1,0 +1,57 @@
+body {
+    font-family: 'Consolas', 'Courier', sans-serif;
+}
+
+p {
+    margin: 0;
+    padding: 0;
+}
+
+.description {
+    margin: 0 0.5em 0 0;
+}
+
+.display-line {
+}
+
+.barBody {
+    background-color: black;
+    display: inline-block;
+    height: 11px;
+    cursor: pointer;
+}
+
+.barBody:hover {
+    background-color: yellowgreen;
+}
+
+.zeroPad {
+    visibility: hidden;
+}
+
+.lightbox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(20,22,22,.95);
+    z-index: 100;
+    color: #ccc;
+    overflow-x: scroll;
+    overflow-y: scroll;
+}
+
+.lightbox-highlight {
+    border: 2px solid yellowgreen;
+}
+
+.lightbox-content {
+    width: 50%;
+    margin: 1em auto;
+    line-height: 1.5;
+}
+
+.lightbox-content a {
+    color: yellow;
+}
