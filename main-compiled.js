@@ -65,7 +65,7 @@
   }
 
   /**
-   * Aggregate word frequencies by week, month, or year
+   * Aggregate word frequencies by day, month, or year
    * @param {object} wordCounts
    * @param {string} period
    */
@@ -133,7 +133,7 @@
   }
 
   /**
-   * Return the intervals of two dates, for example, input '201408' and '201502'
+   * Return the intervals of two dates, for example, input '201408' and '201502',
    * you get ['201408', '201409', '201410', '201411', '201412', '201501', '201502']
    * @param {string} startDate
    * @param {string} endDate
@@ -299,9 +299,15 @@
   }
 
   /*================================================
-    END of data processing; START of DOM manipulation
+    END of data-processing helper functions;
+   START of DOM manipulation
    =================================================*/
 
+  /**
+   * Get the period (e.g. 'year' or 'month'),
+   * chosen through radio option in the HTML form
+   * @returns {string}
+   */
   function getChosenPeriod() {
 
     var options = document.getElementsByName('period');
@@ -336,6 +342,11 @@
   var dataDisplay = document.getElementById('display');
 
   btnConfirm.addEventListener('click', function (event) {
+
+    /**
+     *  Display the bars
+     */
+
     var searchResults = transformToArray(aggregatePeriod(countWordByDay(keywordInput.value, newssimData), getChosenPeriod()));
 
     var maxValue = getMaxValue(searchResults);
@@ -359,11 +370,85 @@
       return '[' + d.period + ': ' + padValue(d.value, maxValue) + ']';
     });
 
-    selections.selectAll('div.barBody').style('width', '0').transition().style('width', function (d) {
+    selections.selectAll('div.barBody').attr('data-keyword', keywordInput.value).attr('data-period', function (d) {
+      return d.period;
+    }).style('width', '0').transition().style('width', function (d) {
       return barScale(d.value) + 'px';
     });
 
     selections.exit().remove();
+  });
+
+  function prettifyLightboxContent(content, keyword, highlightClass) {
+    var result = content;
+    var re = undefined;
+
+    re = new RegExp('\\n', 'g');
+    result = result.replace(re, '<br>');
+
+    re = new RegExp('\n', 'g');
+    result = result.replace(re, '<br>');
+
+    re = new RegExp('\s', 'g');
+    result = result.replace(re, '<br>');
+
+    re = new RegExp(keyword, 'g');
+    result = result.replace(re, '<span class=' + highlightClass + '>' + keyword + '</span>');
+
+    return result;
+  }
+
+  function prettifyDate(s) {
+    return [s.slice(0, 4), s.slice(4, 6), s.slice(6, 8)].join('-');
+  }
+
+  function createRecordLightbox(data, keyword) {
+
+    var div = document.createElement('div');
+    div.className = 'lightbox';
+
+    var html = '';
+
+    for (var i = 0; i < data.length; i += 1) {
+      html += '\n        <div class="lightbox-content">\n          <div>\n            <time>\n              ' + prettifyDate(data[i].publish_date) + '\n            </time>\n            <a href=' + data[i].url + '>' + data[i].url + '</a>\n          </div>\n          <div>\n            ' + prettifyLightboxContent(data[i].content, keyword, 'lightbox-highlight') + '\n          </div>\n        </div>\n      ';
+    }
+
+    div.innerHTML = html;
+    document.body.style.overflow = 'hidden';
+
+    document.addEventListener('keydown', function (event) {
+      if (event.keyCode === 27) {
+        div.style.display = 'none';
+        document.body.style.overflow = 'scroll';
+      }
+    });
+
+    return div;
+  }
+
+  dataDisplay.addEventListener('click', function (event) {
+
+    /**
+     *   A bar in the bar-chart is clicked:
+     *   Display detailed information about that day
+     */
+
+    if (event.target.className === 'barBody') {
+      (function () {
+
+        var keyword = event.target.dataset.keyword;
+        var period = event.target.dataset.period;
+
+        var relevantData = newssimData.filter(function (record) {
+          return record.content.includes(keyword);
+        }).filter(function (record) {
+          return record.publish_date.startsWith(period);
+        });
+
+        var lightbox = createRecordLightbox(relevantData, keyword);
+        document.body.appendChild(lightbox);
+      })();
+    }
   });
 })(window, window.document, window.d3, window.newssim_db);
 

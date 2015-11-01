@@ -44,7 +44,7 @@
   }
 
   /**
-   * Aggregate word frequencies by week, month, or year
+   * Aggregate word frequencies by day, month, or year
    * @param {object} wordCounts
    * @param {string} period
    */
@@ -105,7 +105,7 @@
   }
 
   /**
-   * Return the intervals of two dates, for example, input '201408' and '201502'
+   * Return the intervals of two dates, for example, input '201408' and '201502',
    * you get ['201408', '201409', '201410', '201411', '201412', '201501', '201502']
    * @param {string} startDate
    * @param {string} endDate
@@ -246,10 +246,16 @@
 
   /*================================================
 
-   END of data processing; START of DOM manipulation
+   END of data-processing helper functions;
+   START of DOM manipulation
 
   =================================================*/
 
+  /**
+   * Get the period (e.g. 'year' or 'month'),
+   * chosen through radio option in the HTML form
+   * @returns {string}
+   */
   function getChosenPeriod () {
 
     const options = document.getElementsByName('period')
@@ -281,6 +287,11 @@
   const dataDisplay = document.getElementById('display')
 
   btnConfirm.addEventListener('click', (event) => {
+
+    /**
+     *  Display the bars
+     */
+
     let searchResults = transformToArray(aggregatePeriod(countWordByDay(keywordInput.value, newssimData), getChosenPeriod()))
 
     let maxValue = getMaxValue(searchResults)
@@ -307,11 +318,96 @@
       .html(d => `[${d.period}: ${padValue(d.value, maxValue)}]`)
 
     selections.selectAll('div.barBody')
+      .attr('data-keyword', keywordInput.value)
+      .attr('data-period', d => d.period)
       .style('width', '0')
       .transition()
       .style('width', d => (barScale(d.value) + 'px'))
 
     selections.exit().remove()
+
+  })
+
+  function prettifyLightboxContent (content, keyword, highlightClass) {
+    let result = content
+    let re
+
+    re = new RegExp('\\n', 'g')
+    result = result.replace(re, '<br>')
+
+    re = new RegExp('\n', 'g')
+    result = result.replace(re, '<br>')
+
+    re = new RegExp('\s', 'g')
+    result = result.replace(re, '<br>')
+
+    re = new RegExp(keyword, 'g')
+    result = result.replace(re, `<span class=${highlightClass}>${keyword}</span>`)
+
+    return result
+  }
+
+  function prettifyDate(s) {
+    return [s.slice(0, 4), s.slice(4, 6), s.slice(6, 8)].join('-')
+  }
+
+  function createRecordLightbox (data, keyword) {
+
+    let div = document.createElement('div')
+    div.className = 'lightbox'
+
+    let html = ''
+
+    for (let i = 0; i < data.length; i += 1) {
+      html += `
+        <div class="lightbox-content">
+          <div>
+            <time>
+              ${prettifyDate(data[i].publish_date)}
+            </time>
+            <a href=${data[i].url}>${data[i].url}</a>
+          </div>
+          <div>
+            ${prettifyLightboxContent(data[i].content, keyword, 'lightbox-highlight')}
+          </div>
+        </div>
+      `
+    }
+
+    div.innerHTML = html
+    document.body.style.overflow = 'hidden'
+
+    document.addEventListener('keydown', event => {
+      if (event.keyCode === 27) {
+        div.style.display = 'none'
+        document.body.style.overflow = 'scroll'
+      }
+    })
+
+    return div
+  }
+
+  dataDisplay.addEventListener('click', event => {
+
+    /**
+     *   A bar in the bar-chart is clicked:
+     *   Display detailed information about that day
+     */
+
+    if (event.target.className === 'barBody') {
+
+      let keyword = event.target.dataset.keyword
+      let period = event.target.dataset.period
+
+      let relevantData = newssimData
+        .filter(record => record.content.includes(keyword))
+        .filter(record =>
+          record.publish_date.startsWith(period))
+
+      let lightbox = createRecordLightbox(relevantData, keyword)
+      document.body.appendChild(lightbox)
+    }
+
 
   })
 
