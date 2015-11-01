@@ -7,13 +7,26 @@
 </head>
 <body>
 
+  <div class='loading-notice'>
+    Loading...
+  </div>
+  <script src="./xinwenlianbo_text_20110406-20151031.js"></script>
+
   <div id="content">
-    <input title="keyword" type="text" class="keywordInput" />
+    <form>
+      Aggregate search result by...
+      <input type='radio' title='year' name='year' value='year' /> Year
+      <input type='radio' title='month' name='month' value='month' checked /> Month
+      <input type='radio' title='day' name='day' value='day' /> Day
+    </form>
+    <input title="keyword" type="text" class="keywordInput" value="计划生育" />
     <button class="btnConfirm">Search</button>
+    <div id='display'>
+
+    </div>
   </div>
 
   <script src="./d3.min.js"></script>
-  <script src="./xinwenlianbo_text_20110406-20151031.js"></script>
-  <script src="./main.js"></script>
+  <script src="./main-compiled.js"></script>
 </body>
 </html>
