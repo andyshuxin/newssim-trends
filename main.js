@@ -2,18 +2,19 @@
   'use strict';
 
   // Monkey patching for ES7 array includes
-  Array.prototype.includes = function (element) {
-    return (this.indexOf(element) !== -1)
+  if (typeof Array.prototype.includes !== 'undefined') {
+    Array.prototype.includes = function (element) {
+      return (this.indexOf(element) !== -1)
+    }
   }
 
   /**
    * Get the frequencies of a keyword in a data on daily basis
    * Days with no mentions are not included at all
-   * @param {string}    word: keyword to search
-   * @param {object}  data: database of content, arary of objects with content field
-   * @return {object}   in form of {20130202: 3,
-   *                                20130804: 2,
-   *                                ...}
+   * @param {string}  word: keyword to search
+   * @param {object}  data: database of content, array of objects with content field
+   * @return {object} returns an object in form of
+   *                   {20130202: 3, 20130804: 2, ...}
    */
   function countWordByDay (word, data) {
 
@@ -77,7 +78,8 @@
   }
 
   /**
-   * Input n and return '0n' if n < 0
+   * Input n (month or day) and return '0n' if n < 10,
+   * so that it has constant width of 2
    * @param n
    */
   function padDatePart(n) {
@@ -101,7 +103,6 @@
     }
 
     //FIXME: Wrong results on leap years
-
   }
 
   /**
@@ -244,6 +245,30 @@
     return result
   }
 
+  /**
+   * Get the max value of an array of object with "value" property
+   * @param {object[]} data
+   * @return {number}
+   */
+  const getMaxValue = (data) =>
+    data.reduce((max, entry) => entry.value > max ? entry.value : max , 0)
+
+  /**
+   * Calculate a representation of a number of left-padding zeros, so that its
+   * width is equal to maxValue
+   * For example, padValue(13, 1381) and you get '0013'.
+   * @param value
+   * @param maxValue
+   * @returns {string}
+   */
+  const padValue = (value, maxValue) => {
+    let result = value.toString()
+    while (result.length < maxValue.toString().length) {
+      result = '<span class="zeroPad">0</span>' + result
+    }
+    return result
+  }
+
   /*================================================
 
    END of data-processing helper functions;
@@ -264,17 +289,6 @@
         return options[i].value
       }
     }
-  }
-
-  const getMaxValue = (data) =>
-    data.reduce((max, entry) => entry.value > max ? entry.value : max , 0)
-
-  const padValue = (value, maxValue) => {
-    let result = value.toString()
-    while (result.length < maxValue.toString().length) {
-      result = '<span class="zeroPad">0</span>' + result
-    }
-    return result
   }
 
   // Hide loading notice as the script has been fully loaded by now
@@ -325,7 +339,6 @@
       .style('width', d => (barScale(d.value) + 'px'))
 
     selections.exit().remove()
-
   })
 
   function prettifyLightboxContent (content, keyword, highlightClass) {
