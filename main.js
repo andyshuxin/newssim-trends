@@ -315,7 +315,7 @@
       })
 
     selections.selectAll('span.description')
-      .html(d => `[${d.period}: ${padValue(d.value, maxValue)}]`)
+      .html(d => `[${prettifyDate(d.period)} -> ${padValue(d.value, maxValue)}]`)
 
     selections.selectAll('div.barBody')
       .attr('data-keyword', keywordInput.value)
@@ -347,8 +347,14 @@
     return result
   }
 
-  function prettifyDate(s) {
-    return [s.slice(0, 4), s.slice(4, 6), s.slice(6, 8)].join('-')
+  function prettifyDate (s) {
+    if (s.length === 8) {
+      return [s.slice(0, 4), s.slice(4, 6), s.slice(6, 8)].join('-')
+    } else if (s.length === 6) {
+      return [s.slice(0, 4), s.slice(4, 6)].join('-')
+    } else {
+      return s
+    }
   }
 
   function createRecordLightbox (data, keyword) {

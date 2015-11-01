@@ -7,6 +7,10 @@ p {
     padding: 0;
 }
 
+p:hover {
+    background-color: #ddd;
+}
+
 .description {
     margin: 0 0.5em 0 0;
 }
@@ -14,11 +18,15 @@ p {
 .display-line {
 }
 
+.display-line:hover {
+}
+
 .barBody {
     background-color: black;
     display: inline-block;
-    height: 11px;
+    height: 20px;
     cursor: pointer;
+    vertical-align: middle;
 }
 
 .barBody:hover {
