@@ -1,14 +1,19 @@
 ;(function (window, document, d3, newssimData) {
   'use strict';
 
+  // Monkey patching for ES7 array includes
+  Array.prototype.includes = function (element) {
+    return (this.indexOf(element) !== -1)
+  }
+
   /**
    * Get the frequencies of a keyword in a data on daily basis
+   * Days with no mentions are not included at all
    * @param {string}    word: keyword to search
    * @param {object}  data: database of content, arary of objects with content field
    * @return {object}   in form of {20130202: 3,
    *                                20130804: 2,
    *                                ...}
-   *                    days with no mentions are not included at all
    */
   function countWordByDay (word, data) {
 
@@ -40,7 +45,7 @@
 
   /**
    * Aggregate word frequencies by week, month, or year
-   * @param {object[]} wordCounts
+   * @param {object} wordCounts
    * @param {string} period
    */
   function aggregatePeriod (wordCounts, period = 'month') {
@@ -71,7 +76,148 @@
     return result
   }
 
-  console.log(aggregatePeriod(countWordByDay('一胎', newssimData), 'year'))
+
+  /**
+   * Input n and return '0n' if n < 0
+   * @param n
+   */
+  function padDatePart(n) {
+    if (n < 10) {
+      return '0' + n
+    } else {
+      return '' + n
+    }
+  }
+
+  function getDaysInMonth(month) {
+    let thirtyDaysMonth = [4, 6, 9, 11]
+    let thirtyoneDaysMonth = [1, 3, 5, 7, 8, 10, 12]
+
+    if (thirtyDaysMonth.includes(month)) {
+      return 30
+    } else if (thirtyoneDaysMonth.includes(month)) {
+      return 31
+    } else {
+      return 28
+    }
+
+    //FIXME: Wrong results on leap years
+
+  }
+
+  console.log(getDaysInMonth(1))
+
+  /**
+   * Return the intervals of two dates, for example, input '201408' and '201502'
+   * you get ['201408', '201409', '201410', '201411', '201412', '201501', '201502']
+   * @param {string} startDate
+   * @param {string} endDate
+   */
+  function getDateIntervals (startDate, endDate) {
+    if (startDate.length !== endDate.length) {
+      throw new Error('startDate and endDate have different length; aborting...')
+    }
+
+    let result = [];
+    let startYear, startMonth, startDay, endYear, endMonth, endDay
+    switch (startDate.length) {
+
+      // Years, like '2011' to '2015
+      case 4:
+        for (let i = +startDate; i <= +endDate; i += 1) {
+          result.push(i.toString())
+        }
+        break;
+
+      // Months, like '201104' to '201501'
+      case 6:
+
+        startYear = +startDate.slice(0, 4)
+        startMonth = +startDate.slice(4, 6)
+        endYear = +endDate.slice(0, 4)
+        endMonth = +endDate.slice(4, 6)
+
+        for (let year = startYear; year <= endYear; year += 1) {
+          for (let month = 1; month <= 12; month += 1) {
+
+            // First year: skip months before startMonth
+            if ((year === startYear) && (month < startMonth)) {
+              continue
+            }
+
+            // Last year: skip months after endMonth
+            if ((year === endYear) && (month > endMonth)) {
+              continue
+            }
+
+            result.push(year.toString() + padDatePart(month.toString()))
+          }
+        }
+
+        break;
+
+      // Days, like '20120401' to '20130801'
+      case 8:
+        startYear = +startDate.slice(0, 4)
+        startMonth = +startDate.slice(4, 6)
+        startDay = +startDate.slice(6, 8)
+        endYear = +endDate.slice(0, 4)
+        endMonth = +endDate.slice(4, 6)
+        endDay = +endDate.slice(6, 8)
+
+        for (let year = startYear; year <= endYear; year += 1) {
+          for (let month = 1; month <= 12; month += 1) {
+            for (let day = 1; day <= getDaysInMonth(month); day += 1) {
+
+              // First year: skip months before startMonth
+              if ((year === startYear) && (month < startMonth)) {
+                continue
+              }
+
+              // Last year: skip months after endMonth
+              if ((year === endYear) && (month > endMonth)) {
+                continue
+              }
+
+              // First year and first month: skip days before startDay
+              if ((year === startYear) && (month === startMonth) && (day < startDay)) {
+                continue
+              }
+
+              // last year and last month: skip days after startDay
+              if ((year === endYear) && (month === endMonth) && (day > endDay)) {
+                continue
+              }
+
+              result.push('' + year + padDatePart(month) + padDatePart(day))
+            }
+          }
+        }
+
+        break;
+
+      default:
+        throw new Error(`Unrecognized date format: ${startDate}`)
+    }
+
+    return result
+  }
+
+  /**
+   * Transform data in form of {'201404': 32, '201408': 6} into an array like
+   * [{period: '201404', value: 32},
+   *  {period: '201406', value:  0},
+   *  {period: '201407', value:  0},
+   *  {period: '201408', value:  6}]
+   * @param {object} data
+   */
+  function transformToArray (data) {
+
+    // First step: add zeros to the gaps lacking data
+
+  }
+
+  console.log(transformToArray({'201404': 32, '201408': 6}))
 
   // Hide loading notice
   const loadingNotice = document.getElementsByClassName('loading-notice')[0]
@@ -80,24 +226,13 @@
   // Get DOM elements
   const btnConfirm = document.getElementsByClassName('btnConfirm')[0]
   const keywordInput = document.getElementsByClassName('keywordInput')[0]
-  const display = document.getElementById('display')
+  const dataDisplay = document.getElementById('display')
 
   btnConfirm.addEventListener('click', (event) => {
     let searchResult = aggregatePeriod(countWordByDay(keywordInput.value, newssimData), 'month')
     let resultLine
     let bar
-    display.innerHTML = ''
-
-    for (let date in searchResult) {
-      resultLine = document.createElement('p')
-      bar = document.createElement('div')
-      resultLine.textContent = date.toString() + '-' + searchResult[date]
-      bar.style.height = '10px'
-      bar.style.backgroundColor = 'black'
-      bar.style.width = searchResult[date] * 100 + 'px'
-      resultLine.appendChild(bar)
-      display.appendChild(resultLine)
-    }
+    dataDisplay.innerHTML = ''
   })
 
 })(window, window.document, window.d3, window.newssim_db)
